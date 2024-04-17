@@ -1,0 +1,60 @@
+{
+  "schema": {
+    "idx": {
+      "columns": {
+        "name": {
+          "type": "text",
+          "validation_type": "name",
+          "unique": true
+        },
+        "value": {
+          "type": "int",
+          "validation_type": "uint",
+          "int_min": 0,
+          "default": 0
+        }
+      }
+    }
+  },
+  "types": {
+    "name": {
+      "text_match": "[a-zA-Z0-9]*"
+    },
+    "uint": {
+      "check": ["intp", "item"],
+      "int_min": 0
+    }
+  },
+  "ops": {
+    "dt-get-value-by-name": {
+      "params": {
+        "name": {
+          "description": "Name to change",
+          "default": "test",
+          "validation_type": "name"
+        }
+      },
+      "body": ["sql", "select idx where value = ?", ["var", "name"]]
+    },
+    "dt-idx-incr": {
+      "params": {
+        "amount": {
+          "description": "Amount to change",
+          "default": 1,
+          "check": ["intp", "item"]
+        },
+        "name": {
+          "description": "Name to change",
+          "default": "test",
+          "validation_type": "name"
+        }
+      },
+      "body": [
+        "let_recursive", [
+          "value", ["sql", "select idx where value = ?", ["var", "name"]],
+          "final_amount", ["+", ["var", "value"], ["var", "amount"]]
+        ], ["sql", "update idx set value = ? where name = ?", ["var", "final_amount"] , ["var", "name"]]
+      ]
+    }
+  }
+}
