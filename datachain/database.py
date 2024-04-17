@@ -2,6 +2,8 @@ import sqlite3
 from pathlib import Path
 import json
 
+from .evaluator import evaluator_item
+
 class Database():
     def __init__(self, chainfile):
         self.chainfile = Path(chainfile)
@@ -31,3 +33,6 @@ class Database():
             return items[0]
         return items
         
+@evaluator_item(name='sql')
+def _sql(env, query, *args):
+    return env['db'].sql(query, *args)
