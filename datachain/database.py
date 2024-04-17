@@ -21,4 +21,13 @@ class Database():
         with self.chainfile.open('r') as f:
             return json.loads(next(f))
 
+    def sql(self, query, *args):
+        cursor = self.db.cursor()
+        result = cursor.execute(query, args)
+        items = result.fetchall()
+        if len(items) > 0 and len(items[0]) == 1:
+            items = [v[0] for v in items]
+        if len(items) == 1:
+            return items[0]
+        return items
         

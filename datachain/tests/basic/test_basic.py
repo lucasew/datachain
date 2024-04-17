@@ -34,6 +34,8 @@ def test_basic():
     db = Database(concatenated_file)
     print(db._header, file=sys.stderr)
     print(db.db_id, file=sys.stderr)
+    print(db.sql("create table teste (eoq, trabson)"))
+    print(db.sql("select name from sqlite_schema"))
 
 if __name__ == '__main__':
     test_basic()
