@@ -68,6 +68,7 @@ def stringp(env, arg):
 
 @evaluator_item()
 def intp(env, arg):
+    print('intp chamado', arg)
     if isinstance(arg, int):
         return arg
     return None
@@ -99,6 +100,10 @@ def _if(env, cond, if_true, if_false=None):
 def _var(env, var):
     assert type(var) == str
     return env.get(var)
+
+@evaluator_item(name='let_recursive', eval_args=False)
+def _let_recursive(env, *exprs):
+    raise NotImplementedError()
 
 @evaluator_item(name='wrap_native')
 def wrap_native_callable(env, callable, eval_args=True):

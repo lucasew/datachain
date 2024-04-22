@@ -11,7 +11,12 @@ class Database():
         self.db = sqlite3.connect(':memory:') # TODO: persistence cache
         assert self.chainfile.exists()
         self.evaluator = self._setup()
-
+        with self.chainfile.open('r') as f:
+            next(f) # skip header
+            for body_item in f:
+                body_item_json = json.loads(body_item)
+                self.evaluator.eval(body_item_json)
+                
     @property
     def db_id(self):
         from hashlib import sha256
@@ -34,10 +39,12 @@ class Database():
                 assert isinstance(item, int)
                 assert item >= param['int_min']
             if 'validation_type' in param:
-                assert truep(_eval({**env, item: item}, [f'validate_{param["validation_type"]}', ['var', 'item']]))
+                assert _eval({**env, 'item': item}, ['truep', [f'validate_{param["validation_type"]}', ['var', 'item']]])
             if 'check' in param:
-                assert truep(_eval({**env, item: item}, param['check']))
+                assert item is not None
+                assert _eval({**env, 'item': item}, ['truep', param['check']])
             return True
+        return checker
 
     def _setup(self):
         header = self._header
@@ -50,13 +57,15 @@ class Database():
 
         for op_name, op in header['ops'].items():
             def op_payload(env, **kwargs):
+                print('kwargs op', kwargs)
                 handled_args = dict()
                 for param_name, param in op['params'].items():
-                    item = param.get(kwargs.get(param_name, param.default))
+                    item = kwargs.get(param_name, param['default'])
                     checker = self._get_checker(param)
                     assert checker(env, item)
                     handled_args[param_name] = item
-                return _eval({**eval, **handled_args}, op.body)
+                env = {**env, **handled_args}
+                return env['eval'](env, op['body'])
 
             base_env[op_name] = op_payload 
         return Evaluator(base_env)
