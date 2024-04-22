@@ -102,8 +102,14 @@ def _var(env, var):
     return env.get(var)
 
 @evaluator_item(name='let_recursive', eval_args=False)
-def _let_recursive(env, *exprs):
-    raise NotImplementedError()
+def _let_recursive(env, stmts, expr):
+    new_env = {**env}
+    assert len(stmts) % 2 == 0
+    for i in range(0, len(stmts), 2):
+        k = stmts[i]
+        v = stmts[i + 1]
+        new_env[k] = _eval(new_env, v)
+    return _eval(new_env, expr)
 
 @evaluator_item(name='wrap_native')
 def wrap_native_callable(env, callable, eval_args=True):
