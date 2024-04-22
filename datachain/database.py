@@ -1,14 +1,16 @@
 import sqlite3
 from pathlib import Path
 import json
+import sys
 
-from .evaluator import evaluator_item
+from .evaluator import evaluator_item, Evaluator, _eval, truep
 
 class Database():
     def __init__(self, chainfile):
         self.chainfile = Path(chainfile)
         self.db = sqlite3.connect(':memory:') # TODO: persistence cache
         assert self.chainfile.exists()
+        self.evaluator = self._setup()
 
     @property
     def db_id(self):
@@ -17,6 +19,48 @@ class Database():
         header_sorted = json.dumps(self._header, sort_keys=True)
         hasher.update(header_sorted.encode('utf-8'))
         return hasher.hexdigest()
+
+    def _get_checker(self, param):
+        if param.get('int_min'):
+            assert isinstance(param['int_min'], int)
+        if param.get('int_max'):
+            assert isinstance(param['int_max'], int)
+
+        def checker(env, item):
+            if param.get('int_min'):
+                assert isinstance(item, int)
+                assert item >= param['int_min']
+            if param.get('int_max'):
+                assert isinstance(item, int)
+                assert item >= param['int_min']
+            if 'validation_type' in param:
+                assert truep(_eval({**env, item: item}, [f'validate_{param["validation_type"]}', ['var', 'item']]))
+            if 'check' in param:
+                assert truep(_eval({**env, item: item}, param['check']))
+            return True
+
+    def _setup(self):
+        header = self._header
+        base_env = dict(
+            db=self
+        )
+
+        for type_name, type in header['types'].items():
+            base_env[f'validate_{type_name}'] = self._get_checker(type)
+
+        for op_name, op in header['ops'].items():
+            def op_payload(env, **kwargs):
+                handled_args = dict()
+                for param_name, param in op['params'].items():
+                    item = param.get(kwargs.get(param_name, param.default))
+                    checker = self._get_checker(param)
+                    assert checker(env, item)
+                    handled_args[param_name] = item
+                return _eval({**eval, **handled_args}, op.body)
+
+            base_env[op_name] = op_payload 
+        return Evaluator(base_env)
+       
 
     @property
     def _header(self):

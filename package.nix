@@ -8,5 +8,9 @@ buildPythonPackage {
 
   src = ./.;
 
+  shellHook = ''
+  PYTHONPATH=$PYTHONPATH:$(pwd)
+  '';
+
   nativeBuildInputs = [ pytestCheckHook ];
 }
