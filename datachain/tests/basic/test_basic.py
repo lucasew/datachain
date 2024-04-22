@@ -36,7 +36,7 @@ def test_basic():
     print(db.db_id, file=sys.stderr)
 
     db.sql("create table teste (eoq, trabson)")
-    assert db.sql("select name from sqlite_schema") == 'teste'
+    assert db.sql("select name from sqlite_schema where name like '%teste%'") == 'teste'
     assert db.sql('select ?', 2) == 2
 
 def test_evaluator_basic():

@@ -68,7 +68,6 @@ def stringp(env, arg):
 
 @evaluator_item()
 def intp(env, arg):
-    print('intp chamado', arg)
     if isinstance(arg, int):
         return arg
     return None

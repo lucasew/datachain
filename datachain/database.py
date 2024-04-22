@@ -11,11 +11,37 @@ class Database():
         self.db = sqlite3.connect(':memory:') # TODO: persistence cache
         assert self.chainfile.exists()
         self.evaluator = self._setup()
+        self.sql(self._sql_schema)
         with self.chainfile.open('r') as f:
             next(f) # skip header
             for body_item in f:
+                if body_item.strip() == '':
+                    continue
                 body_item_json = json.loads(body_item)
                 self.evaluator.eval(body_item_json)
+
+    @property
+    def _sql_schema(self):
+        sql = ""
+        for table_name, table in self._header['schema'].items():
+            sql += f'create table {table_name} ('
+            column_stmts = []
+            for column_name, column in table['columns'].items():
+                column_stmt = ""
+                column_stmt += f'{column_name} '
+                column_stmt += f'{column["type"]} '
+                if 'default' in column:
+                    default = column['default']
+                    if isinstance(default, str):
+                        column_stmt += f"default '{default}' "
+                    else:
+                        column_stmt += f"default {default} "
+                if column.get('unique'):
+                    column_stmt += ' unique'
+                column_stmts.append(column_stmt)
+            sql += ",".join(column_stmts)
+            sql += ');'
+        return sql
                 
     @property
     def db_id(self):
@@ -57,7 +83,6 @@ class Database():
 
         for op_name, op in header['ops'].items():
             def op_payload(env, **kwargs):
-                print('kwargs op', kwargs)
                 handled_args = dict()
                 for param_name, param in op['params'].items():
                     item = kwargs.get(param_name, param['default'])
