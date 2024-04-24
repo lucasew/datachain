@@ -9,16 +9,47 @@ from datachain import Database, Evaluator
 
 this_dir = Path(__file__).parent
 
-def test_basic():
+def test_basic_chain():
     tmpd = Path(tempfile.mkdtemp())
     tmpd.mkdir(parents=True, exist_ok=True)
     if __name__ == '__main__':
-        print(tmpd)
+        print(tmpd, file=sys.stderr)
     concatenated_file = tmpd / "concatenated.json"
     with concatenated_file.open('w') as f:
         j = json.loads((this_dir / "example.header.json").read_text())
         print(json.dumps(j), file=f)
         print((this_dir / "example.body.json").read_text(), file=f)
+
+    handle_test_with_concatenated_file(concatenated_file)
+
+def test_signed_chain():
+    tmpd = Path(tempfile.mkdtemp())
+    tmpd.mkdir(parents=True, exist_ok=True)
+    if __name__ == '__main__':
+        print(tmpd, file=sys.stderr)
+    signed_concatenated_file = tmpd / "signed_concatenated.json"
+    with signed_concatenated_file.open('w') as out:
+        from datachain.crypto import Signer
+        signer = Signer()
+        
+        header = json.loads((this_dir / "example.header.json").read_text())
+        header['allowed_keys'] = [ str(signer.verifier) ]
+
+        print(json.dumps(header), file=out)
+
+        with (this_dir / "example.body.json").open('r') as f:
+            for line in f:
+                try:
+                    data = json.loads(line)
+                    if '_sign' not in data:
+                        data = signer.sign(data)
+                    print(json.dumps(data), file=out)
+                except json.JSONDecodeError:
+                    print(line, file=out)
+    handle_test_with_concatenated_file(signed_concatenated_file, is_the_signed_test=True)
+    
+
+def handle_test_with_concatenated_file(concatenated_file, is_the_signed_test=False):
 
     with concatenated_file.open('r') as f:
         for i, line in enumerate(f):
@@ -36,7 +67,10 @@ def test_basic():
     print(db.db_id, file=sys.stderr)
 
     print(db.sql('select * from idx'), file=sys.stderr)
-    assert db.sql('select value from idx where name = ?', "aaa") == 2
+    if is_the_signed_test:
+        assert db.sql('select value from idx where name = ?', "aaa") == 2
+    else:
+        assert db.sql('select value from idx where name = ?', "aaa") == 3
     assert db.sql('select value from idx where name = ?', "test") == 4
 
     db.sql("create table teste (eoq, trabson)")

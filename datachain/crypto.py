@@ -3,13 +3,16 @@ import sys
 
 from nacl.encoding import HexEncoder
 from nacl.signing import SigningKey, VerifyKey
+from nacl.exceptions import InvalidkeyError, BadSignatureError
 
 class Verifier:
     def __init__(self, verify_key):
         if isinstance(verify_key, VerifyKey):
             self.key = verify_key
         elif isinstance(verify_key, str):
-            self.key = VerifyKey(verify_key.encode('utf-8'), encoder=HexEncoder)
+            verify_key = verify_key.encode('utf-8')
+            verify_key = HexEncoder.decode(verify_key)
+            self.key = VerifyKey(verify_key)
         else:
             raise ValueError()
 
@@ -19,8 +22,19 @@ class Verifier:
         item_bytes = json.dumps(item_to_sign, sort_keys=True).encode('utf-8')
         return self.key.verify(item_bytes, HexEncoder.decode(item['_sign'].encode('utf-8')))
 
+    def is_valid(self, item):
+        try:
+            self.verify(item)
+            return True
+        except (InvalidkeyError, BadSignatureError):
+            return False
+        return False
+            
+
     def __str__(self):
-        return self.key.encode(HexEncoder).decode('utf-8')
+        ret = self.key.encode(HexEncoder).decode('utf-8')
+        assert isinstance(ret, str)
+        return ret
 
 class Signer:
     def __init__(self, key=None):

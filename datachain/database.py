@@ -12,19 +12,30 @@ class Database():
         assert self.chainfile.exists()
         self.evaluator = self._setup()
         self.sql(self._sql_schema)
+
         with self.chainfile.open('r') as f:
             next(f) # skip header
             for body_item in f:
-                result = self.handle_body_item(body_item)
+                result = self._handle_body_item(body_item)
                 print('result', result, file=sys.stderr)
 
-    def handle_body_item(self, item):
+    def _verify_signature(self, data):
+        if len(self.verifiers) == 0:
+            return True
+        for verifier in self.verifiers:
+            if verifier.is_valid(data):
+                return True
+        return False
+        
+    def _handle_body_item(self, item):
         print('body_item', item, file=sys.stderr)
         if isinstance(item, str):
             item = item.strip()
             if item == '':
                 return
             item = json.loads(item)
+        if not self._verify_signature(item):
+            return None
         return self.evaluator.eval(item['transaction'], env=item)
 
     @property
@@ -81,6 +92,12 @@ class Database():
 
     def _setup(self):
         header = self._header
+        self.verifiers = []
+        if 'allowed_keys' in header:
+            from datachain.crypto import Verifier
+            print('allowed_keys', header['allowed_keys'], file=sys.stderr)
+            self.verifiers = [Verifier(v) for v in header['allowed_keys']]
+
         base_env = dict(
             db=self
         )
