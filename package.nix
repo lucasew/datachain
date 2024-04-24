@@ -1,10 +1,11 @@
 { buildPythonPackage,
- pytestCheckHook
+ pytestCheckHook,
+ pynacl
 }:
 
 buildPythonPackage {
   pname = "datachain";
-  version = builtins.readFile ./datachain/VERSION;
+  version = builtins.replaceStrings [ "\n" ] [ "" ] (builtins.readFile ./datachain/VERSION);
 
   src = ./.;
 
@@ -13,4 +14,6 @@ buildPythonPackage {
   '';
 
   nativeBuildInputs = [ pytestCheckHook ];
+
+  buildInputs = [ pynacl ];
 }

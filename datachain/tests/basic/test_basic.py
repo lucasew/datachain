@@ -35,6 +35,10 @@ def test_basic():
     print(db._header, file=sys.stderr)
     print(db.db_id, file=sys.stderr)
 
+    print(db.sql('select * from idx'), file=sys.stderr)
+    assert db.sql('select value from idx where name = ?', "aaa") == 2
+    assert db.sql('select value from idx where name = ?', "test") == 4
+
     db.sql("create table teste (eoq, trabson)")
     assert db.sql("select name from sqlite_schema where name like '%teste%'") == 'teste'
     assert db.sql('select ?', 2) == 2

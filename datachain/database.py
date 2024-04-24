@@ -15,10 +15,17 @@ class Database():
         with self.chainfile.open('r') as f:
             next(f) # skip header
             for body_item in f:
-                if body_item.strip() == '':
-                    continue
-                body_item_json = json.loads(body_item)
-                self.evaluator.eval(body_item_json)
+                result = self.handle_body_item(body_item)
+                print('result', result, file=sys.stderr)
+
+    def handle_body_item(self, item):
+        print('body_item', item, file=sys.stderr)
+        if isinstance(item, str):
+            item = item.strip()
+            if item == '':
+                return
+            item = json.loads(item)
+        return self.evaluator.eval(item['transaction'], env=item)
 
     @property
     def _sql_schema(self):
@@ -82,17 +89,19 @@ class Database():
             base_env[f'validate_{type_name}'] = self._get_checker(type)
 
         for op_name, op in header['ops'].items():
-            def op_payload(env, **kwargs):
+            def op_payload(env):
                 handled_args = dict()
                 for param_name, param in op['params'].items():
-                    item = kwargs.get(param_name, param['default'])
+                    item = env.get(param_name, param['default'])
+                    print('param', param_name, item, file=sys.stderr)
                     checker = self._get_checker(param)
                     assert checker(env, item)
                     handled_args[param_name] = item
                 env = {**env, **handled_args}
                 return env['eval'](env, op['body'])
+            register = evaluator_item(name=op_name, register=False)
 
-            base_env[op_name] = op_payload 
+            base_env[op_name] = register(op_payload)
         return Evaluator(base_env)
        
 
@@ -102,6 +111,7 @@ class Database():
             return json.loads(next(f))
 
     def sql(self, query, *args):
+        print('sql', query, args, file=sys.stderr)
         cursor = self.db.cursor()
         result = cursor.execute(query, args)
         items = result.fetchall()
@@ -109,6 +119,8 @@ class Database():
             items = [v[0] for v in items]
         if len(items) == 1:
             return items[0]
+        if len(items) == 0:
+            return None
         return items
         
 @evaluator_item(name='sql')

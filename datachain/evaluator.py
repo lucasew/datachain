@@ -1,3 +1,5 @@
+import sys
+
 stdlib = {}
 
 def evaluator_item(name=None, eval_args=True, register=True):
@@ -6,7 +8,10 @@ def evaluator_item(name=None, eval_args=True, register=True):
         final_func = func
         if eval_args:
             def final_func(env, *args, **kwargs):
-                return func(env, *list(map(lambda item: _eval(env, item), args)), **_eval(env, kwargs))
+                all_args = [*args, kwargs]
+                all_args = [*list(map(lambda item: _eval(env, item), all_args))]
+                return _eval(env, [func, *all_args])
+                # return func({**env, **_eval(env, kwargs)}, *list(map(lambda item: _eval(env, item), args)))
         final_func.__name__ = func_name
         if register:
             stdlib[func_name] = final_func
@@ -18,10 +23,10 @@ def _eval(env, expr):
     if expr is None:
         return None
     if isinstance(expr, dict):
-        if expr.get('_eval'):
+        if expr.get('_eval') is not None:
             return {k: _eval(v) for k, v in expr.items()}
         return expr
-    if isinstance(expr, list) and len(expr) > 0 and isinstance(expr[0], str):
+    if isinstance(expr, list) and len(expr) > 0 and (isinstance(expr[0], str) or callable(expr[0])):
         kwargs = {}
         args = []
         for arg in expr[1:]:
@@ -29,8 +34,12 @@ def _eval(env, expr):
                 kwargs = {**kwargs, **arg}
             else:
                 args.append(arg)
-        fn = env[expr[0]]
-        return fn(env, *args, **kwargs)
+        # print('call', expr[0], args, kwargs, file=sys.stderr)
+        fn = env[expr[0]] if not callable(expr[0]) else expr[0]
+        new_env = env
+        if len(kwargs) > 0:
+            new_env = {**new_env, **kwargs}
+        return fn(new_env, *args)
     return expr
 
 @evaluator_item()
@@ -120,5 +129,9 @@ class Evaluator():
     def __init__(self, env):
         self.env = {**stdlib, **env}
 
-    def eval(self, expr):
-        return self.env['eval'](self.env, expr)
+    def eval(self, expr, env=None):
+        if env is None:
+            env = self.env
+        else:
+            env = {**self.env, **env}
+        return self.env['eval'](env, expr)

@@ -53,7 +53,7 @@
         "let_recursive", [
           "value", ["or", ["intp", ["sql", "select value from idx where name = ?", ["var", "name"]]], 1],
           "final_amount", ["+", ["var", "value"], ["var", "amount"]]
-        ], ["sql", "insert or replace into idx (name, value) values (?, ?)", ["var", "final_amount"] , ["var", "name"]]
+        ], ["sql", "insert or replace into idx (name, value) values (?, ?)", ["var", "name"], ["var", "final_amount"] ]
       ]
     }
   }
