@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: datachain
+Version: 0.0.1
+Summary: Small-data library that may become something
+Home-page: https://github.com/lucasew/datachain
+Author: lucasew
+Requires-Dist: pynacl
+Requires-Dist: pytest
+Dynamic: author
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: summary
