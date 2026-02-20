@@ -1,4 +1,3 @@
-{"transaction": ["dt-idx-incr", ["var", "data"]], "data": {"amount": 1, "name": "aaa"}}
-{"transaction": ["dt-idx-incr", ["var", "data"]], "data": {"amount": 1}}
-{"transaction": ["dt-idx-incr", ["var", "data"]], "data": {"amount": 1, "name": "aaa"}, "_sign": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}
-{"transaction": ["dt-idx-incr", ["var", "data"]], "data": {"amount": 2}}
+{"transaction": ["insert", {"name": "aaa", "amount": 1}], "test": 1}
+{"transaction": ["insert", {"name": "aaa", "amount": 1}], "test": 2}
+{"transaction": ["insert", {"name": "test", "amount": 4}], "test": 3}

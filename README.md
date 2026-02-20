@@ -1,6 +1,6 @@
 # datachain
 
-PoC of a small-data database that is based on text files that uses a JSON-based Lisp to setup stuff 
+PoC of a small-data database that is based on text files that uses a JSON-based Lisp to setup stuff
 
 ## Design
 
