@@ -41,7 +41,7 @@ jobs:
           git add .
           git commit -m "chore: update generated code"
           git push origin $BRANCH_NAME
-          gh pr create --title "chore: update generated code" --body "Automated PR to update generated code." --base main --head $BRANCH_NAME
+          gh pr create --title "chore: update generated code" --body "Automated PR to update generated code." --base main --head $BRANCH_NAME || echo "PR creation failed. Continuing."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
