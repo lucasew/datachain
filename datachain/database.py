@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import sys
 
-from .evaluator import evaluator_item, Evaluator, _eval, truep
+from .evaluator import evaluator_item, Evaluator, _eval, is_truthy
 
 class Database():
     def __init__(self, chainfile):
@@ -38,6 +38,18 @@ class Database():
             return None
         return self.evaluator.eval(item['transaction'], env=item)
 
+    def _generate_column_statement(self, column_name, column):
+        column_stmt = f'{column_name} {column["type"]} '
+        if 'default' in column:
+            default = column['default']
+            if isinstance(default, str):
+                column_stmt += f"default '{default}' "
+            else:
+                column_stmt += f"default {default} "
+        if column.get('unique'):
+            column_stmt += ' unique'
+        return column_stmt
+
     @property
     def _sql_schema(self):
         sql = ""
@@ -45,18 +57,7 @@ class Database():
             sql += f'create table {table_name} ('
             column_stmts = []
             for column_name, column in table['columns'].items():
-                column_stmt = ""
-                column_stmt += f'{column_name} '
-                column_stmt += f'{column["type"]} '
-                if 'default' in column:
-                    default = column['default']
-                    if isinstance(default, str):
-                        column_stmt += f"default '{default}' "
-                    else:
-                        column_stmt += f"default {default} "
-                if column.get('unique'):
-                    column_stmt += ' unique'
-                column_stmts.append(column_stmt)
+                column_stmts.append(self._generate_column_statement(column_name, column))
             sql += ",".join(column_stmts)
             sql += ');'
         return sql
@@ -83,10 +84,10 @@ class Database():
                 assert isinstance(item, int)
                 assert item >= param['int_min']
             if 'validation_type' in param:
-                assert _eval({**env, 'item': item}, ['truep', [f'validate_{param["validation_type"]}', ['var', 'item']]])
+                assert _eval({**env, 'item': item}, ['is_truthy', [f'validate_{param["validation_type"]}', ['var', 'item']]])
             if 'check' in param:
                 assert item is not None
-                assert _eval({**env, 'item': item}, ['truep', param['check']])
+                assert _eval({**env, 'item': item}, ['is_truthy', param['check']])
             return True
         return checker
 

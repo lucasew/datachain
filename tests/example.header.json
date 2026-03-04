@@ -21,7 +21,7 @@
       "text_match": "[a-zA-Z0-9]*"
     },
     "uint": {
-      "check": ["intp", ["var", "item"]],
+      "check": ["is_int", ["var", "item"]],
       "int_min": 0
     }
   },
@@ -41,7 +41,7 @@
         "amount": {
           "description": "Amount to change",
           "default": 1,
-          "check": ["intp", ["var", "item"]]
+          "check": ["is_int", ["var", "item"]]
         },
         "name": {
           "description": "Name to change",
@@ -51,7 +51,7 @@
       },
       "body": [
         "let_recursive", [
-          "value", ["or", ["intp", ["sql", "select value from idx where name = ?", ["var", "name"]]], 1],
+          "value", ["or", ["is_int", ["sql", "select value from idx where name = ?", ["var", "name"]]], 1],
           "final_amount", ["+", ["var", "value"], ["var", "amount"]]
         ], ["sql", "insert or replace into idx (name, value) values (?, ?)", ["var", "name"], ["var", "final_amount"] ]
       ]

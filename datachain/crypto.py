@@ -57,12 +57,14 @@ class Signer:
         with open(str(location), 'wb') as f:
              f.write(self.key.encode())
 
+    SIGNATURE_LENGTH_BYTES = 64
+
     def sign(self, item):
         assert isinstance(item, dict)
         item_to_sign = {**item, '_sign': None}
         item_bytes = json.dumps(item_to_sign, sort_keys=True).encode('utf-8')
         signature = self.key.sign(item_bytes)
-        signature = signature[:64]
+        signature = signature[:self.SIGNATURE_LENGTH_BYTES]
         signature = HexEncoder.encode(signature)
         signature = signature.decode('utf-8')
         print('signature', len(signature), signature, file=sys.stderr)

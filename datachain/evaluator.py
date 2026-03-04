@@ -61,22 +61,22 @@ evaluator_item(name="*")(lfold(lambda env, x, y: x * y))
 evaluator_item(name="/")(lfold(lambda env, x, y: x / y))
 evaluator_item(name="//")(lfold(lambda env, x, y: x // y))
 
-@evaluator_item()
-def truep(env, arg):
+@evaluator_item(name='is_truthy')
+def is_truthy(env, arg):
     if arg is None:
         return False
     if arg is False:
         return False
     return True
 
-@evaluator_item()
-def stringp(env, arg):
+@evaluator_item(name='is_string')
+def is_string(env, arg):
     if isinstance(arg, str):
         return arg
     return None
 
-@evaluator_item()
-def intp(env, arg):
+@evaluator_item(name='is_int')
+def is_int(env, arg):
     if isinstance(arg, int):
         return arg
     return None
@@ -85,7 +85,7 @@ def intp(env, arg):
 def _and(env, *args):
     for item in args:
         item = _eval(env, item)
-        if not truep(env, item):
+        if not is_truthy(env, item):
             return False
     return args[-1]
 
@@ -93,13 +93,13 @@ def _and(env, *args):
 def _or(env, *args):
     for item in args:
         item = _eval(env, item)
-        if truep(env, item):
+        if is_truthy(env, item):
             return item
     return None
 
 @evaluator_item(name='if', eval_args=False)
 def _if(env, cond, if_true, if_false=None):
-    if truep(env, _eval(env, cond)):
+    if is_truthy(env, _eval(env, cond)):
         return _eval(env, if_true)
     else:
         return _eval(env, if_false)
