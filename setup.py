@@ -9,5 +9,10 @@ setup(
     url="https://github.com/lucasew/datachain",
     author="lucasew",
     packages=find_packages(exclude=["tests", ".github"]),
-    install_requires=[],
+    install_requires=[
+        "pynacl",
+    ],
+    extras_require={
+        "test": ["pytest"],
+    },
 )
