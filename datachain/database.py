@@ -2,7 +2,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from .evaluator import Evaluator, _eval, evaluator_item, truep
+from .evaluator import Evaluator, _eval, evaluator_item
 
 
 class Database:
@@ -114,7 +114,7 @@ class Database:
 
         for op_name, op in header["ops"].items():
 
-            def op_payload(env):
+            def op_payload(env, op=op):
                 handled_args = dict()
                 for param_name, param in op["params"].items():
                     item = env.get(param_name, param["default"])
