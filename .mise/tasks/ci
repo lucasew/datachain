@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+mise run lint && mise run test

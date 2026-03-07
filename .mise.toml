@@ -1,0 +1,14 @@
+[tools]
+python = "3.12.2"
+
+[tasks.install]
+run = "pip install pytest pynacl"
+
+[tasks.ci]
+run = "mise run install && mise run lint && mise run test"
+
+[tasks.lint]
+run = "trunk check --filter=-bandit,-prettier"
+
+[tasks.test]
+run = "python -m pytest tests/"
