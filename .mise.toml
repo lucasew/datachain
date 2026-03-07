@@ -10,7 +10,7 @@ run = "pip install pytest pynacl"
 run = "mise run install && mise run lint && mise run test"
 
 [tasks.lint]
-run = "trunk check --filter=-bandit,-prettier"
+run = "trunk check"
 
 [tasks.test]
 run = "python -m pytest tests/"
