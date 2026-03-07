@@ -1,0 +1,16 @@
+[tools]
+python = "3.12.2"
+node = "22.22.1"
+"npm:@trunkio/launcher" = "1.3.4"
+
+[tasks.install]
+run = "pip install -e .[test]"
+
+[tasks.ci]
+run = "mise run install && mise run lint && mise run test"
+
+[tasks.lint]
+run = "trunk check"
+
+[tasks.test]
+run = "python -m pytest tests/"

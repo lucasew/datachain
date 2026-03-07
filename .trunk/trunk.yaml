@@ -1,0 +1,17 @@
+version: 0.1
+cli:
+  version: 1.22.8
+plugins:
+  sources:
+    - id: trunk
+      ref: v1.6.5
+      uri: https://github.com/trunk-io/plugins
+lint:
+  ignore:
+    - linters: [ALL]
+      paths:
+        - tests/**
+  enabled:
+    - black@24.4.2
+    - isort@5.13.2
+    - ruff@0.4.4
