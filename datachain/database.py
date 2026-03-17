@@ -6,6 +6,15 @@ import sys
 from .evaluator import evaluator_item, Evaluator, _eval, truep
 
 class Database():
+    """
+    Materializes a JSON-line chainfile into an in-memory SQLite database.
+
+    The chainfile serves as the source of truth, where the first line defines
+    the header (schema, custom types, ops, and allowed signers), and subsequent
+    lines represent individual data transactions. Transactions are validated
+    cryptographically (if `allowed_keys` are configured) and evaluated using a
+    custom JSON-based Lisp evaluator to mutate the SQLite state.
+    """
     def __init__(self, chainfile):
         self.chainfile = Path(chainfile)
         self.db = sqlite3.connect(':memory:') # TODO: persistence cache
@@ -20,6 +29,14 @@ class Database():
                 print('result', result, file=sys.stderr)
 
     def _verify_signature(self, data):
+        """
+        Cryptographically verifies the authenticity of a transaction block.
+
+        If the database header defines `allowed_keys`, every transaction must
+        carry a valid `_sign` signature matching at least one of the known
+        Ed25519 public keys. If no keys are configured, all transactions are
+        accepted by default.
+        """
         if len(self.verifiers) == 0:
             return True
         for verifier in self.verifiers:
@@ -28,6 +45,14 @@ class Database():
         return False
         
     def _handle_body_item(self, item):
+        """
+        Processes a single transaction line from the chainfile.
+
+        This includes parsing the JSON payload, verifying cryptographic
+        signatures, and passing the transaction body into the Lisp evaluator
+        to apply the operation to the SQLite state. Failing verification
+        silently drops the transaction.
+        """
         print('body_item', item, file=sys.stderr)
         if isinstance(item, str):
             item = item.strip()
@@ -70,6 +95,14 @@ class Database():
         return hasher.hexdigest()
 
     def _get_checker(self, param):
+        """
+        Generates a validation function for a custom type parameter.
+
+        The returned checker evaluates custom logic (like `int_min`,
+        `int_max`, or arbitrary Lisp `check` expressions) against incoming
+        data during operation dispatch. It acts as the gatekeeper for strongly
+        typed transaction arguments.
+        """
         if param.get('int_min'):
             assert isinstance(param['int_min'], int)
         if param.get('int_max'):
@@ -91,6 +124,14 @@ class Database():
         return checker
 
     def _setup(self):
+        """
+        Bootstraps the evaluator environment based on the chainfile header.
+
+        Extracts allowed public keys for transaction validation and registers
+        custom user-defined types and operations as callable Lisp forms within
+        the evaluator's namespace. This allows transactions to trigger domain-
+        specific logic defined entirely in the schema.
+        """
         header = self._header
         self.verifiers = []
         if 'allowed_keys' in header:
@@ -128,6 +169,13 @@ class Database():
             return json.loads(next(f))
 
     def sql(self, query, *args):
+        """
+        Executes a raw SQL query against the materialized in-memory SQLite database.
+
+        Unwraps single-column results into a flat list, and single-row results
+        into singular scalar values. This method is exposed to the evaluator as
+        the primitive `sql` function, allowing transactions to modify state.
+        """
         print('sql', query, args, file=sys.stderr)
         cursor = self.db.cursor()
         result = cursor.execute(query, args)
