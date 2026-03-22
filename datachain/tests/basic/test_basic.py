@@ -59,7 +59,8 @@ def handle_test_with_concatenated_file(concatenated_file, is_the_signed_test=Fal
             try:
                 json.loads(line)
             except Exception as e:
-                print('while parsing line', i + 1, line, file=sys.stderr)
+                from datachain.error import report_error
+                report_error(e, context=f"while parsing line {i + 1} {line}")
                 raise e
 
     db = Database(concatenated_file)

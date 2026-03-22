@@ -1,0 +1,1 @@
+- 2024-03-22: Missing key checks before accessing dict values can cause unhandled KeyError (DoS)

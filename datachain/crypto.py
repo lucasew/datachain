@@ -18,6 +18,8 @@ class Verifier:
 
     def verify(self, item):
         assert isinstance(item, dict)
+        if '_sign' not in item:
+            raise BadSignatureError("Missing '_sign' key")
         item_to_sign = {**item, '_sign': None}
         item_bytes = json.dumps(item_to_sign, sort_keys=True).encode('utf-8')
         return self.key.verify(item_bytes, HexEncoder.decode(item['_sign'].encode('utf-8')))
@@ -28,7 +30,10 @@ class Verifier:
             return True
         except (InvalidkeyError, BadSignatureError):
             return False
-        return False
+        except Exception as e:
+            from .error import report_error
+            report_error(e, context="Verifier.is_valid")
+            return False
             
 
     def __str__(self):
