@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from datachain import Database, Evaluator
+from datachain.error import report_error
 
 this_dir = Path(__file__).parent
 
@@ -59,7 +60,7 @@ def handle_test_with_concatenated_file(concatenated_file, is_the_signed_test=Fal
             try:
                 json.loads(line)
             except Exception as e:
-                print('while parsing line', i + 1, line, file=sys.stderr)
+                report_error(e, f"Parsing Line {i + 1}: {line}")
                 raise e
 
     db = Database(concatenated_file)
