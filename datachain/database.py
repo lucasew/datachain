@@ -81,7 +81,7 @@ class Database():
                 assert item >= param['int_min']
             if param.get('int_max'):
                 assert isinstance(item, int)
-                assert item >= param['int_min']
+                assert item <= param['int_max']
             if 'validation_type' in param:
                 assert _eval({**env, 'item': item}, ['truep', [f'validate_{param["validation_type"]}', ['var', 'item']]])
             if 'check' in param:
