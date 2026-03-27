@@ -1,0 +1,1 @@
+- 2025-03-27: [Logic error in boundary check allowing input validation bypass]
